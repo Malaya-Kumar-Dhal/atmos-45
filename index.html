@@ -16,7 +16,7 @@
   --ff-d:'Playfair Display',serif;--ff-b:'Outfit',sans-serif;
 }
 body{background:var(--bg);color:var(--text);font-family:var(--ff-b);min-height:100vh;overflow-x:hidden}
-#canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+#canvas{position:fixed;inset:0;z-index:0;pointer-events:none;transition:opacity .3s ease}
 body::after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   opacity:0.025}
@@ -35,11 +35,11 @@ header{padding:42px 0 32px;display:flex;flex-direction:column;align-items:center
 .search-box:focus-within{border-color:var(--border-lit);background:rgba(120,200,255,.05);box-shadow:0 0 0 3px rgba(120,200,255,.06),0 8px 30px rgba(0,0,0,.35)}
 .s-ico{color:var(--muted);flex-shrink:0;transition:color .3s}
 .search-box:focus-within .s-ico{color:var(--glow)}
-#city-input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--ff-b);font-size:15px;padding:14px 0;letter-spacing:.01em}
-#city-input::placeholder{color:var(--muted)}
-#go-btn{flex-shrink:0;background:linear-gradient(135deg,rgba(120,200,255,.2),rgba(120,200,255,.08));border:1px solid rgba(120,200,255,.22);border-radius:12px;color:var(--glow);width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .25s}
-#go-btn:hover{background:linear-gradient(135deg,rgba(120,200,255,.3),rgba(120,200,255,.14));transform:scale(1.05)}
-#go-btn:active{transform:scale(.96)}
+#city-input,#cmp-input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--ff-b);font-size:15px;padding:14px 0;letter-spacing:.01em}
+#city-input::placeholder,#cmp-input::placeholder{color:var(--muted)}
+#go-btn,#cmp-go{flex-shrink:0;background:linear-gradient(135deg,rgba(120,200,255,.2),rgba(120,200,255,.08));border:1px solid rgba(120,200,255,.22);border-radius:12px;color:var(--glow);width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .25s}
+#go-btn:hover,#cmp-go:hover{background:linear-gradient(135deg,rgba(120,200,255,.3),rgba(120,200,255,.14));transform:scale(1.05)}
+#go-btn:active,#cmp-go:active{transform:scale(.96)}
 #go-btn.busy{animation:rotate .8s linear infinite;pointer-events:none}
 @keyframes rotate{to{transform:rotate(360deg)}}
 
@@ -71,7 +71,7 @@ header{padding:42px 0 32px;display:flex;flex-direction:column;align-items:center
 /* STATES */
 .state{display:none}
 .state.on{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:28vh;gap:14px;text-align:center}
-#s-weather.on,#s-results.on{display:block;min-height:unset}
+#s-weather.on,#s-results.on,#s-compare.on{display:block;min-height:unset}
 .idle-ico{font-size:56px;opacity:.16}
 .idle-txt{font-size:14px;color:var(--muted);line-height:1.8}
 .idle-hint{font-size:11px;color:var(--muted2)}
@@ -256,6 +256,59 @@ header{padding:42px 0 32px;display:flex;flex-direction:column;align-items:center
 
 @keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:380px){.sg{grid-template-columns:repeat(2,1fr)}.temp-big{font-size:78px}.aqi-pollutants{grid-template-columns:repeat(2,1fr)}}
+
+/* COMPARE */
+body.cmp-on #app{max-width:720px}
+body.cmp-on header,body.cmp-on #main-search,body.cmp-on #recent-wrap,body.cmp-on #fav-wrap,body.cmp-on #qc-section{display:none!important}
+body.cmp-on #app{padding-top:28px}
+#s-compare{text-align:left}
+#app{transition:max-width .35s ease}
+.cmp-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;margin:-4px 0 22px;padding:13px;background:linear-gradient(120deg,rgba(120,200,255,.13),rgba(255,200,118,.09));border:1px solid var(--border-lit);border-radius:16px;color:var(--accent);font-family:var(--ff-b);font-size:13px;font-weight:500;letter-spacing:.03em;cursor:pointer;transition:all .25s}
+.cmp-btn:hover{border-color:rgba(120,200,255,.5);transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.cmp-btn:active{transform:scale(.99)}
+.cmp-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+.cmp-top-r{display:flex;align-items:center;gap:8px}
+.cmp-pick-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.cmp-pick-title{font-family:var(--ff-d);font-style:italic;font-size:20px;color:var(--accent)}
+.cmp-msg{font-size:12px;color:var(--muted);text-align:center;padding:18px 0}
+.cmp-head{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.cmp-city{--c:var(--glow);background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:20px 12px 14px;text-align:center;position:relative;overflow:hidden;min-width:0}
+.cmp-city::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--c);opacity:.8}
+.cmp-city.b{--c:var(--warm)}
+.cc-name{font-family:var(--ff-d);font-style:italic;font-size:19px;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-reg{font-size:10px;letter-spacing:.06em;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-time{font-size:10px;color:var(--muted2);margin-top:2px}
+.cc-temp{font-family:var(--ff-d);font-size:60px;font-weight:600;line-height:1;margin:14px 0 4px;color:var(--c);text-shadow:0 0 50px rgba(120,200,255,.12)}
+.cc-temp span{font-size:22px;font-weight:400;color:var(--muted);vertical-align:top;position:relative;top:6px}
+.cc-ico{font-size:34px;line-height:1.2}
+.cc-cond{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.cc-change{margin-top:12px;background:none;border:1px solid var(--border);border-radius:50px;color:var(--muted);font-family:var(--ff-b);font-size:11px;padding:5px 12px;cursor:pointer;transition:all .25s}
+.cc-change:hover{border-color:var(--border-lit);color:var(--glow)}
+.cmp-swap-row{display:flex;justify-content:center;margin-bottom:12px}
+.cmp-swap{background:var(--surface);border:1px solid var(--border);border-radius:50px;color:var(--muted);font-family:var(--ff-b);font-size:12px;font-weight:500;padding:6px 16px;cursor:pointer;transition:all .25s}
+.cmp-swap:hover{border-color:var(--border-lit);color:var(--glow)}
+.cmp-sum{background:rgba(120,200,255,.05);border:1px solid rgba(120,200,255,.14);border-radius:18px;padding:13px 16px;margin-bottom:22px;display:flex;flex-direction:column;gap:7px}
+.cmp-sum div{font-size:12.5px;color:var(--text);line-height:1.5}
+.cmp-sum b{color:var(--accent);font-weight:600}
+.cmp-legend{display:flex;gap:14px;margin:10px 0 2px;flex-wrap:wrap}
+.lg{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.lg i{width:14px;height:3px;border-radius:3px;display:inline-block}
+#cmp-chart{width:100%;height:150px;display:block;touch-action:pan-y;cursor:crosshair}
+.cmp-readout{font-size:11px;color:var(--muted);text-align:center;margin-top:8px;min-height:16px}
+.cmp-readout b{font-weight:600}
+.cmp-note{font-size:10px;color:var(--muted2);margin:-4px 0 10px;display:flex;align-items:center;gap:6px}
+.cmp-table{background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:6px;margin-bottom:22px}
+.cmp-row{display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;padding:10px 6px;border-radius:14px;text-align:center;gap:4px}
+.cmp-row:nth-child(odd){background:rgba(255,255,255,.025)}
+.cr-v{font-size:13.5px;font-weight:500;color:var(--accent);min-width:0}
+.cr-v.win{color:var(--green)}
+.cr-v.win::after{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--green);margin-left:6px;vertical-align:middle;box-shadow:0 0 6px var(--green)}
+.cr-i{font-size:15px;line-height:1.1}
+.cr-l{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);margin-top:2px}
+.cr-v .cd-i{font-size:15px;margin-right:3px}
+.cr-v .cd-sep{color:var(--muted2)}
+.cr-day{font-size:12px;font-weight:500;color:var(--muted)}
+@media(max-width:480px){.cc-temp{font-size:48px}.cr-v{font-size:12px}.cr-l{font-size:8px;letter-spacing:.06em}.cc-name{font-size:16px}}
 </style>
 </head>
 <body>
@@ -268,7 +321,7 @@ header{padding:42px 0 32px;display:flex;flex-direction:column;align-items:center
 </header>
 
 <!-- SEARCH -->
-<div class="search-row">
+<div class="search-row" id="main-search">
   <div class="search-box">
     <svg class="s-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input id="city-input" type="text" placeholder="Type a city and press Enter…" autocomplete="off" spellcheck="false">
@@ -309,7 +362,7 @@ header{padding:42px 0 32px;display:flex;flex-direction:column;align-items:center
 <div class="state on" id="s-idle">
   <div class="idle-ico">🌍</div>
   <div class="idle-txt">Type a city above and press <strong style="color:var(--glow)">Enter</strong><br>to see matching places</div>
-  <div class="idle-hint">or tap a popular city · save favorites with ⭐</div>
+  <div class="idle-hint">or tap a popular city · save favorites with ⭐ · compare any two cities</div>
 </div>
 
 <!-- SEARCHING -->
@@ -351,8 +404,8 @@ header{padding:42px 0 32px;display:flex;flex-direction:column;align-items:center
     <div class="top-actions">
       <button class="fav-btn" id="fav-btn" onclick="toggleFav()" title="Save city">☆</button>
       <div class="utog">
-        <button class="ub on" id="bc" onclick="setUnit('C')">°C</button>
-        <button class="ub" id="bf" onclick="setUnit('F')">°F</button>
+        <button class="ub on" data-u="C" id="bc" onclick="setUnit('C')">°C</button>
+        <button class="ub" data-u="F" id="bf" onclick="setUnit('F')">°F</button>
       </div>
     </div>
   </div>
@@ -375,6 +428,11 @@ header{padding:42px 0 32px;display:flex;flex-direction:column;align-items:center
   </div>
 
   <div class="sep"></div>
+
+  <button class="cmp-btn" onclick="openCompare()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+    Compare with another city
+  </button>
 
   <!-- Stats row -->
   <div class="sg">
@@ -483,39 +541,188 @@ header{padding:42px 0 32px;display:flex;flex-direction:column;align-items:center
   </div>
 
 </div><!-- /weather -->
+
+<!-- COMPARE -->
+<div id="s-compare" class="state">
+  <div class="cmp-top">
+    <div class="results-title">Compare cities</div>
+    <div class="cmp-top-r">
+      <div class="utog">
+        <button class="ub on" data-u="C" onclick="setUnit('C')">°C</button>
+        <button class="ub" data-u="F" onclick="setUnit('F')">°F</button>
+      </div>
+      <button class="results-back" onclick="closeCompare()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+    </div>
+  </div>
+
+  <div id="cmp-picker">
+    <div class="cmp-pick-top">
+      <div class="cmp-pick-title" id="cmp-pick-title"></div>
+      <button class="results-back" id="cmp-cancel" onclick="cmpCancel()">Cancel</button>
+    </div>
+    <div class="search-row" style="animation:none">
+      <div class="search-box">
+        <svg class="s-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="cmp-input" type="text" placeholder="Search a city and press Enter…" autocomplete="off" spellcheck="false">
+      </div>
+      <button id="cmp-go" onclick="cmpSearch()" aria-label="Search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+    </div>
+    <div id="cmp-results"></div>
+    <div class="qc-wrap" id="cmp-chips" style="animation:none"></div>
+  </div>
+
+  <div id="cmp-body"></div>
+</div>
+
 </div><!-- /app -->
 
 <script>
-// ─── CANVAS ─────────────────────────────────
+// ─── DYNAMIC BACKGROUND (weather + day/night, split when comparing) ───
 const cv=document.getElementById('canvas'),cx=cv.getContext('2d');
-let parts=[],raf,pMode='stars';
-function rsz(){cv.width=innerWidth;cv.height=innerHeight}
-rsz();addEventListener('resize',rsz);
-class Pt{
-  constructor(){this.reset(true)}
-  reset(first){
-    this.x=Math.random()*cv.width;
-    this.y=first?Math.random()*cv.height:-12;
-    if(pMode==='rain'){this.vx=-1.5-Math.random();this.vy=9+Math.random()*8;this.len=13+Math.random()*10;this.a=.13+Math.random()*.22}
-    else if(pMode==='snow'){this.vx=(Math.random()-.5)*.6;this.vy=.8+Math.random()*1.4;this.r=1.5+Math.random()*2.5;this.a=.45+Math.random()*.4;this.w=Math.random()*Math.PI*2}
-    else{this.x=Math.random()*cv.width;this.y=Math.random()*cv.height;this.r=.4+Math.random()*1.4;this.a=.1+Math.random()*.65;this.tw=Math.random()*Math.PI*2}
-  }
-  tick(){
-    if(pMode==='rain'){this.x+=this.vx;this.y+=this.vy;if(this.y>cv.height)this.reset()}
-    else if(pMode==='snow'){this.w+=.015;this.x+=this.vx+Math.sin(this.w)*.3;this.y+=this.vy;if(this.y>cv.height)this.reset()}
-    else this.tw+=.018
-  }
-  draw(){
-    cx.save();
-    if(pMode==='rain'){cx.globalAlpha=this.a;cx.strokeStyle='#9ecfee';cx.lineWidth=1;cx.beginPath();cx.moveTo(this.x,this.y);cx.lineTo(this.x+this.vx*2.5,this.y+this.len);cx.stroke()}
-    else if(pMode==='snow'){cx.globalAlpha=this.a;cx.fillStyle='#deeeff';cx.beginPath();cx.arc(this.x,this.y,this.r,0,Math.PI*2);cx.fill()}
-    else{const t=Math.sin(this.tw);cx.globalAlpha=this.a*(0.5+0.5*t);cx.fillStyle='#cce4ff';cx.beginPath();cx.arc(this.x,this.y,this.r*(0.85+0.15*t),0,Math.PI*2);cx.fill()}
-    cx.restore()
-  }
+let zones=[],raf=0,bgList=[],bgKey='',bgTok=0;
+const SKY={
+  clear:{d:['#154a85','#3f82bd'],n:['#04060f','#0c1a38']},
+  partly:{d:['#1f4f80','#5d8fb8'],n:['#060a16','#16233f']},
+  cloudy:{d:['#323e4c','#66737f'],n:['#080b13','#1a212c']},
+  fog:{d:['#4a5560','#7d8892'],n:['#10151c','#262e37']},
+  rain:{d:['#1f2a36','#45535f'],n:['#04070c','#111923']},
+  snow:{d:['#43566b','#7f93a8'],n:['#080f1c','#233146']},
+  storm:{d:['#141925','#323a4b'],n:['#020309','#0e1019']}
+};
+function catOf(c){
+  if(c===0||c===1)return'clear';if(c===2)return'partly';if(c===3)return'cloudy';
+  if(c===45||c===48)return'fog';
+  if([95,96,99].includes(c))return'storm';
+  if([71,73,75,77,85,86].includes(c))return'snow';
+  if((c>=51&&c<=67)||(c>=80&&c<=82))return'rain';
+  return'cloudy'
 }
-function setParts(m){pMode=m;if(raf)cancelAnimationFrame(raf);parts=[];const n=m==='rain'?200:m==='snow'?130:200;for(let i=0;i<n;i++)parts.push(new Pt());loop()}
-function loop(){cx.clearRect(0,0,cv.width,cv.height);const g=cx.createRadialGradient(cv.width/2,0,0,cv.width/2,cv.height*.3,cv.height);g.addColorStop(0,'rgba(8,16,40,0.9)');g.addColorStop(1,'rgba(4,6,14,0)');cx.fillStyle=g;cx.fillRect(0,0,cv.width,cv.height);parts.forEach(p=>{p.tick();p.draw()});raf=requestAnimationFrame(loop)}
-setParts('stars');
+function themeOf(code,isDay){const cat=catOf(code),k=SKY[cat];return{cat,day:isDay,top:isDay?k.d[0]:k.n[0],bot:isDay?k.d[1]:k.n[1]}}
+function isDayAt(wx){
+  const c=wx.current,d=wx.daily,t=new Date(c.time).getTime();
+  return t>=new Date(d.sunrise[0]).getTime()&&t<new Date(d.sunset[0]).getTime()
+}
+const rnd=(a,b)=>a+Math.random()*(b-a);
+function zoneBuild(x0,x1,th){
+  const w=x1-x0,f=w/cv.width,H=cv.height,cat=th.cat;
+  const z={x0,x1,w,th,rain:[],snow:[],stars:[],clouds:[],flash:0,nextFlash:90};
+  if(cat==='rain'||cat==='storm'){
+    const n=Math.round((cat==='storm'?240:170)*f);
+    for(let i=0;i<n;i++)z.rain.push({x:x0+Math.random()*w,y:Math.random()*H,vx:-1.5-Math.random(),vy:9+Math.random()*8,len:13+Math.random()*10,a:.13+Math.random()*.25})
+  }
+  if(cat==='snow'){
+    const n=Math.round(130*f);
+    for(let i=0;i<n;i++)z.snow.push({x:x0+Math.random()*w,y:Math.random()*H,vx:(Math.random()-.5)*.6,vy:.8+Math.random()*1.4,r:1.5+Math.random()*2.5,a:.45+Math.random()*.4,ph:Math.random()*6.28})
+  }
+  if(!th.day&&(cat==='clear'||cat==='partly')){
+    const n=Math.round((cat==='clear'?190:100)*f);
+    for(let i=0;i<n;i++)z.stars.push({x:x0+Math.random()*w,y:Math.random()*H,r:.4+Math.random()*1.4,a:.1+Math.random()*.65,tw:Math.random()*6.28})
+  }
+  const cn={partly:4,cloudy:7,rain:6,storm:7,snow:5,fog:8}[cat]||0;
+  const ca={partly:.12,cloudy:.17,rain:.22,storm:.3,snow:.15,fog:.13}[cat]||0;
+  const dark=(cat==='rain'||cat==='storm');
+  z.cloudCol=dark?'40,52,68':(th.day?'255,255,255':'125,145,180');
+  for(let i=0;i<Math.max(2,Math.round(cn*Math.max(f,.5)));i++){
+    const fog=cat==='fog';
+    z.clouds.push({x:x0+rnd(-.1,1.1)*w,y:fog?rnd(.5,.95)*H:rnd(.02,.45)*H,w:fog?rnd(300,560):rnd(180,380),h:fog?rnd(70,120):rnd(40,90),v:rnd(.08,.3),a:ca})
+  }
+  return z
+}
+function buildZones(){
+  const n=bgList.length;if(!n)return;
+  zones=bgList.map((it,i)=>zoneBuild(cv.width*i/n,cv.width*(i+1)/n,themeOf(it.code,it.isDay)))
+}
+function rsz(){cv.width=innerWidth;cv.height=innerHeight;buildZones()}
+rsz();addEventListener('resize',rsz);
+
+// list: [{code,isDay}] — one entry = full background, two entries = split screen
+function setBg(list){
+  const key=list.map(i=>catOf(i.code)+(i.isDay?'d':'n')).join('|');
+  if(key===bgKey)return;
+  const first=!zones.length;bgKey=key;bgList=list;
+  const tok=++bgTok;
+  if(first){buildZones();if(!raf)loop();return}
+  cv.style.opacity=0;
+  setTimeout(()=>{if(tok===bgTok){buildZones();cv.style.opacity=1}},320)
+}
+
+function drawZone(z){
+  const th=z.th,cat=th.cat,H=cv.height;
+  cx.save();cx.beginPath();cx.rect(z.x0,0,z.w,H);cx.clip();
+  const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,th.top);g.addColorStop(1,th.bot);
+  cx.fillStyle=g;cx.fillRect(z.x0,0,z.w,H);
+  // sun / moon
+  const sx=z.x0+z.w*.78,sy=Math.min(110,H*.16);
+  if(th.day&&(cat==='clear'||cat==='partly')){
+    const k=cat==='clear'?1:.6;
+    const gl=cx.createRadialGradient(sx,sy,0,sx,sy,Math.min(280,z.w*.9));
+    gl.addColorStop(0,`rgba(255,208,125,${.42*k})`);gl.addColorStop(1,'rgba(255,208,125,0)');
+    cx.fillStyle=gl;cx.fillRect(z.x0,0,z.w,H*.7);
+    cx.fillStyle=`rgba(255,232,175,${.92*k})`;cx.beginPath();cx.arc(sx,sy,26,0,6.283);cx.fill()
+  }else if(!th.day&&(cat==='clear'||cat==='partly')){
+    const gl=cx.createRadialGradient(sx,sy,0,sx,sy,150);
+    gl.addColorStop(0,'rgba(190,215,255,.2)');gl.addColorStop(1,'rgba(190,215,255,0)');
+    cx.fillStyle=gl;cx.fillRect(z.x0,0,z.w,H*.6);
+    cx.fillStyle='rgba(228,237,255,.88)';cx.beginPath();cx.arc(sx,sy,20,0,6.283);cx.fill()
+  }
+  // stars
+  z.stars.forEach(p=>{p.tw+=.018;const t=Math.sin(p.tw);cx.globalAlpha=p.a*(.5+.5*t);cx.fillStyle='#cce4ff';cx.beginPath();cx.arc(p.x,p.y,p.r*(.85+.15*t),0,6.283);cx.fill()});
+  cx.globalAlpha=1;
+  // clouds
+  z.clouds.forEach(c=>{
+    c.x+=c.v;if(c.x-c.w/2>z.x1)c.x=z.x0-c.w/2;
+    cx.save();cx.translate(c.x,c.y);cx.scale(1,c.h/c.w);
+    const cg=cx.createRadialGradient(0,0,0,0,0,c.w/2);
+    cg.addColorStop(0,`rgba(${z.cloudCol},${c.a})`);cg.addColorStop(1,`rgba(${z.cloudCol},0)`);
+    cx.fillStyle=cg;cx.beginPath();cx.arc(0,0,c.w/2,0,6.283);cx.fill();cx.restore()
+  });
+  // rain
+  if(z.rain.length){
+    cx.strokeStyle='#9ecfee';cx.lineWidth=1;
+    z.rain.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.y>H){p.y=-12;p.x=z.x0+Math.random()*z.w}
+      if(p.x<z.x0)p.x=z.x1;
+      cx.globalAlpha=p.a;cx.beginPath();cx.moveTo(p.x,p.y);cx.lineTo(p.x+p.vx*2.5,p.y+p.len);cx.stroke()
+    });cx.globalAlpha=1
+  }
+  // snow
+  if(z.snow.length){
+    cx.fillStyle='#deeeff';
+    z.snow.forEach(p=>{
+      p.ph+=.015;p.x+=p.vx+Math.sin(p.ph)*.3;p.y+=p.vy;
+      if(p.y>H){p.y=-8;p.x=z.x0+Math.random()*z.w}
+      if(p.x<z.x0)p.x=z.x1;if(p.x>z.x1)p.x=z.x0;
+      cx.globalAlpha=p.a;cx.beginPath();cx.arc(p.x,p.y,p.r,0,6.283);cx.fill()
+    });cx.globalAlpha=1
+  }
+  // lightning
+  if(cat==='storm'){
+    if(--z.nextFlash<=0){z.flash=.5;z.nextFlash=90+Math.random()*260}
+    if(z.flash>.02){cx.fillStyle=`rgba(200,220,255,${z.flash})`;cx.fillRect(z.x0,0,z.w,H);z.flash*=.86}
+  }
+  cx.restore()
+}
+function loop(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  zones.forEach(drawZone);
+  if(zones.length>1){
+    const x=zones[1].x0,H=cv.height;
+    const sh=cx.createLinearGradient(x-26,0,x+26,0);
+    sh.addColorStop(0,'rgba(0,0,0,0)');sh.addColorStop(.5,'rgba(0,0,0,.28)');sh.addColorStop(1,'rgba(0,0,0,0)');
+    cx.fillStyle=sh;cx.fillRect(x-26,0,52,H);
+    const lg=cx.createLinearGradient(0,0,0,H);
+    lg.addColorStop(0,'rgba(255,255,255,0)');lg.addColorStop(.3,'rgba(255,255,255,.3)');lg.addColorStop(.7,'rgba(255,255,255,.3)');lg.addColorStop(1,'rgba(255,255,255,0)');
+    cx.fillStyle=lg;cx.fillRect(x-.5,0,1,H)
+  }
+  raf=requestAnimationFrame(loop)
+}
+setBg([{code:0,isDay:false}]);
 
 // ─── CONSTANTS ─────────────────────────────
 const WMO={0:['Clear Sky','☀️'],1:['Mainly Clear','🌤️'],2:['Partly Cloudy','⛅'],3:['Overcast','☁️'],45:['Foggy','🌫️'],48:['Icy Fog','🌫️'],51:['Light Drizzle','🌦️'],53:['Drizzle','🌦️'],55:['Heavy Drizzle','🌧️'],61:['Light Rain','🌧️'],63:['Rain','🌧️'],65:['Heavy Rain','🌧️'],71:['Light Snow','🌨️'],73:['Snow','🌨️'],75:['Heavy Snow','❄️'],77:['Snow Grains','❄️'],80:['Light Showers','🌦️'],81:['Showers','🌧️'],82:['Violent Showers','⛈️'],85:['Snow Showers','🌨️'],86:['Heavy Snow Showers','❄️'],95:['Thunderstorm','⛈️'],96:['Thunderstorm+Hail','⛈️'],99:['Severe Storm','⛈️']};
@@ -531,9 +738,10 @@ function ft(dt){const h=dt.getHours(),m=dt.getMinutes();return`${h>12?h-12:h||12
 
 // ─── STATE ──────────────────────────────────
 function showState(id){
-  ['idle','load','err','results','weather'].forEach(s=>{
+  ['idle','load','err','results','weather','compare'].forEach(s=>{
     document.getElementById('s-'+s).classList.toggle('on',s===id)
-  })
+  });
+  document.body.classList.toggle('cmp-on',id==='compare')
 }
 
 // ─── RECENT SEARCHES ────────────────────────
@@ -835,11 +1043,8 @@ function renderWx(){
   document.getElementById('s-vis').textContent=unitC?vis+' km':Math.round(vis*.621)+' mi';
   document.getElementById('s-prs').textContent=Math.round(c.surface_pressure)+' hPa';
 
-  // Canvas particles
-  const code=c.weather_code;
-  if([61,63,65,51,53,55,80,81,82,95,96,99].includes(code))setParts('rain');
-  else if([71,73,75,77,85,86].includes(code))setParts('snow');
-  else setParts('stars');
+  // Background follows weather + day/night
+  setBg([{code:c.weather_code,isDay:isDayAt(data)}]);
 
   // Hourly start index
   const nh=now.getHours();
@@ -912,10 +1117,247 @@ function renderWx(){
 
 function setUnit(u){
   unitC=u==='C';
-  document.getElementById('bc').classList.toggle('on',unitC);
-  document.getElementById('bf').classList.toggle('on',!unitC);
+  document.querySelectorAll('[data-u]').forEach(b=>b.classList.toggle('on',(b.dataset.u==='C')===unitC));
+  if(document.getElementById('s-compare').classList.contains('on')){
+    if(cmpA&&cmpB&&!cmpPicking)renderCmpBody();
+    return
+  }
   if(wxData)renderWx()
 }
+
+// ─── COMPARE TWO CITIES ─────────────────────
+const POP=[['London','GB',51.5074,-0.1278,'United Kingdom','England'],['New York','US',40.7128,-74.006,'United States','New York'],['Tokyo','JP',35.6762,139.6503,'Japan','Tokyo'],['Paris','FR',48.8566,2.3522,'France','Île-de-France'],['Dubai','AE',25.2048,55.2708,'UAE','Dubai'],['Sydney','AU',-33.8688,151.2093,'Australia','New South Wales'],['Mumbai','IN',19.076,72.8777,'India','Maharashtra'],['Toronto','CA',43.6532,-79.3832,'Canada','Ontario'],['Berlin','DE',52.52,13.405,'Germany','Berlin'],['Singapore','SG',1.3521,103.8198,'Singapore','']];
+const COL_A='#78c8ff',COL_B='#ffc876';
+let cmpA=null,cmpB=null,cmpTarget='B',cmpPicking=false;
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function placeAttr(o){return esc(JSON.stringify(o))}
+
+async function fetchBundle(lat,lon){
+  const wxUrl=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
+    +`&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,visibility,dew_point_2m`
+    +`&hourly=temperature_2m,weather_code,precipitation_probability`
+    +`&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_sum`
+    +`&timezone=auto&forecast_days=7`;
+  const aqUrl=`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,european_aqi&timezone=auto`;
+  const[wr,ar]=await Promise.all([fetch(wxUrl),fetch(aqUrl).catch(()=>null)]);
+  const wx=await wr.json();
+  let aq=null;try{aq=ar?await ar.json():null}catch{}
+  return{wx,aq}
+}
+
+function openCompare(){
+  if(!wxData)return;
+  cmpA={name:wxData.city,cc:wxData.cc,country:wxData.country,admin1:wxData.admin1,wx:wxData.data,aq:aqiData};
+  cmpB=null;cmpTarget='B';cmpPicking=true;
+  document.getElementById('cmp-input').value='';
+  document.getElementById('cmp-results').innerHTML='';
+  showState('compare');renderCmp();
+  window.scrollTo({top:0,behavior:'smooth'})
+}
+function closeCompare(){if(wxData)renderWx();else showState('idle')}
+function cmpPick(t){cmpTarget=t;cmpPicking=true;document.getElementById('cmp-results').innerHTML='';document.getElementById('cmp-input').value='';renderCmp();window.scrollTo({top:0,behavior:'smooth'})}
+function cmpCancel(){cmpPicking=false;renderCmp()}
+function cmpSwap(){[cmpA,cmpB]=[cmpB,cmpA];renderCmpBody()}
+
+function renderCmp(){
+  const showPick=cmpPicking||!cmpA||!cmpB;
+  document.getElementById('cmp-picker').style.display=showPick?'block':'none';
+  document.getElementById('cmp-body').style.display=showPick?'none':'block';
+  if(showPick){if(cmpA)setBg([{code:cmpA.wx.current.weather_code,isDay:isDayAt(cmpA.wx)}]);renderCmpPicker()}else renderCmpBody()
+}
+
+function renderCmpPicker(){
+  const other=cmpTarget==='A'?cmpB:cmpA;
+  document.getElementById('cmp-pick-title').textContent=cmpTarget==='A'
+    ?(other?`Pick a city to compare with ${other.name}`:'Pick a city')
+    :`Compare ${other?other.name:'your city'} with…`;
+  document.getElementById('cmp-cancel').style.display=(cmpA&&cmpB)?'flex':'none';
+  const seen=new Set(other?[other.name]:[]),list=[];
+  const add=(n,cc,lat,lon,country,admin1)=>{if(seen.has(n))return;seen.add(n);list.push({name:n,cc,lat,lon,country,admin1})};
+  getFavs().forEach(x=>add(x.name,x.cc,x.lat,x.lon,x.country,x.admin1));
+  getRecent().forEach(x=>add(x.name,x.cc,x.lat,x.lon,x.country,x.admin1));
+  POP.forEach(p=>add(...p));
+  const chips=document.getElementById('cmp-chips');
+  chips.innerHTML='<div class="qc-lbl">Quick pick</div>'+list.slice(0,14).map(p=>`<button class="qc" data-place="${placeAttr(p)}">${flag(p.cc)} ${esc(p.name)}</button>`).join('');
+  chips.onclick=e=>{const b=e.target.closest('[data-place]');if(b)cmpSelect(JSON.parse(b.dataset.place))};
+  document.getElementById('cmp-results').onclick=e=>{const b=e.target.closest('[data-place]');if(b)cmpSelect(JSON.parse(b.dataset.place))}
+}
+
+document.getElementById('cmp-input').addEventListener('keydown',e=>{if(e.key==='Enter')cmpSearch()});
+async function cmpSearch(){
+  const q=document.getElementById('cmp-input').value.trim();if(!q)return;
+  const res=document.getElementById('cmp-results'),btn=document.getElementById('cmp-go');
+  res.innerHTML='<div class="cmp-msg">Searching…</div>';btn.classList.add('busy');
+  try{
+    const[nom,photon,omg]=await Promise.all([fetchNominatim(q),fetchPhoton(q),fetchOpenMeteoGeo(q)]);
+    const seen=new Set();
+    const unique=[...omg,...nom,...photon].filter(r=>{const k=`${r.lat.toFixed(1)},${r.lon.toFixed(1)}`;if(seen.has(k))return false;seen.add(k);return true}).slice(0,8);
+    if(!unique.length){res.innerHTML=`<div class="cmp-msg">No places found for "${esc(q)}". Try a different spelling.</div>`;return}
+    res.innerHTML=unique.map(r=>{
+      const sub=r.sub&&r.sub.length>62?r.sub.slice(0,62)+'…':(r.sub||'');
+      return`<button class="result-card" data-place="${placeAttr({name:r.name,cc:r.cc,lat:r.lat,lon:r.lon,country:r.country,admin1:r.admin1})}"><div class="rc-flag">${flag(r.cc)}</div><div class="rc-info"><div class="rc-name">${esc(r.name)}</div><div class="rc-sub">${esc(sub)||'&nbsp;'}</div></div><svg class="rc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>`
+    }).join('')
+  }catch{res.innerHTML='<div class="cmp-msg">Search failed. Check your connection.</div>'}
+  finally{btn.classList.remove('busy')}
+}
+
+async function cmpSelect(p){
+  const pk=document.getElementById('cmp-picker'),bd=document.getElementById('cmp-body');
+  pk.style.display='none';bd.style.display='block';
+  bd.innerHTML=`<div class="state on" style="min-height:30vh"><div class="ring"></div><div class="load-city">${esc(p.name)}</div><div class="load-txt">Fetching weather & air quality…</div></div>`;
+  try{
+    const{wx,aq}=await fetchBundle(p.lat,p.lon);
+    if(!wx||!wx.current)throw new Error('no data');
+    const obj={name:p.name,cc:p.cc,country:p.country,admin1:p.admin1,wx,aq};
+    if(cmpTarget==='A')cmpA=obj;else cmpB=obj;
+    cmpPicking=false;
+    addRecent([p.name,p.cc,p.lat,p.lon,p.country,p.admin1]);
+    renderCmp()
+  }catch{
+    bd.innerHTML=`<div class="state on" style="min-height:30vh"><div class="err-ico">🌫️</div><div class="err-txt">Couldn't load weather for ${esc(p.name)}. Please try again.</div><button class="retry-btn" onclick="cmpPicking=true;renderCmp()">Choose another city</button></div>`
+  }
+}
+
+function cmpMetrics(x){
+  const c=x.wx.current,d=x.wx.daily,aq=x.aq&&x.aq.current;
+  const sr=new Date(d.sunrise[0]),ss=new Date(d.sunset[0]);
+  return{
+    temp:c.temperature_2m,feels:c.apparent_temperature,hi:d.temperature_2m_max[0],lo:d.temperature_2m_min[0],
+    hum:c.relative_humidity_2m,wind:c.wind_speed_10m,vis:c.visibility==null?null:c.visibility/1000,prs:c.surface_pressure,
+    uv:d.uv_index_max[0]||0,aqi:aq&&aq.european_aqi!=null?aq.european_aqi:null,pm25:aq&&aq.pm2_5!=null?aq.pm2_5:null,
+    rain:d.precipitation_sum[0]||0,rain7:d.precipitation_sum.reduce((a,b)=>a+(b||0),0),
+    sr,ss,day:(ss-sr)/60000,code:c.weather_code,local:new Date(c.time),isDay:isDayAt(x.wx)
+  }
+}
+function aqiLabel(v){return v<=20?'Good':v<=40?'Fair':v<=60?'Moderate':v<=80?'Poor':v<=100?'Very Poor':'Extreme'}
+function uvLabel(v){const L=['Low','Low','Low','Moderate','Moderate','Moderate','High','High','Very High','Very High','Extreme','Extreme'];return L[Math.min(Math.round(v),11)]}
+function fmtDur(m){let h=Math.floor(m/60),mm=Math.round(m%60);if(mm===60){h++;mm=0}return`${h}h ${mm}m`}
+
+function cmpRow(ic,lbl,va,vb,na,nb,mode){
+  let wa='',wb='';
+  if(mode&&na!=null&&nb!=null&&Math.abs(na-nb)>1e-9){
+    const aWins=mode==='low'?na<nb:na>nb;
+    if(aWins)wa=' win';else wb=' win'
+  }
+  return`<div class="cmp-row"><div class="cr-v${wa}">${va}</div><div><div class="cr-i">${ic}</div><div class="cr-l">${lbl}</div></div><div class="cr-v${wb}">${vb}</div></div>`
+}
+
+function renderCmpBody(){
+  if(!cmpA||!cmpB)return;
+  const A=cmpMetrics(cmpA),B=cmpMetrics(cmpB);
+  const bd=document.getElementById('cmp-body');
+  // Different weather or day/night -> split the background in two
+  const bgA={code:A.code,isDay:A.isDay},bgB={code:B.code,isDay:B.isDay};
+  setBg(catOf(A.code)+A.isDay===catOf(B.code)+B.isDay?[bgA]:[bgA,bgB]);
+  const card=(x,m,cls,t)=>{const[cl,ic]=wmo(m.code);
+    return`<div class="cmp-city ${cls}"><div class="cc-name">${flag(x.cc)} ${esc(x.name)}</div><div class="cc-reg">${esc([x.admin1,x.country].filter(Boolean).join(', '))||'&nbsp;'}</div><div class="cc-time">${m.isDay?'☀️ Day':'🌙 Night'} · ${ft(m.local)} local</div><div class="cc-temp">${dp(m.temp)}<span>°</span></div><div class="cc-ico">${ic}</div><div class="cc-cond">${cl}</div><button class="cc-change" onclick="cmpPick('${t}')">Change city</button></div>`};
+
+  // Summary lines
+  const sums=[];
+  const dT=Math.round(unitC?Math.abs(A.temp-B.temp):Math.abs(A.temp-B.temp)*1.8);
+  if(dT===0)sums.push('🌡️ Both cities are the same temperature right now.');
+  else{const w=A.temp>B.temp?cmpA:cmpB,k=A.temp>B.temp?cmpB:cmpA;sums.push(`🌡️ <b>${esc(w.name)}</b> is ${dT}° warmer than <b>${esc(k.name)}</b> right now.`)}
+  if(A.aqi!=null&&B.aqi!=null&&A.aqi!==B.aqi){const w=A.aqi<B.aqi?cmpA:cmpB;sums.push(`🌿 <b>${esc(w.name)}</b> has the cleaner air today.`)}
+  if(Math.abs(A.rain-B.rain)>=0.1){const w=A.rain>B.rain?cmpA:cmpB;sums.push(`☔ More rain expected in <b>${esc(w.name)}</b> today.`)}
+  else if(A.rain<0.1&&B.rain<0.1)sums.push('☀️ Both cities should stay dry today.');
+  if(Math.abs(A.day-B.day)>=1){const w=A.day>B.day?cmpA:cmpB;sums.push(`🌅 <b>${esc(w.name)}</b> gets ${fmtDur(Math.abs(A.day-B.day))} more daylight.`)}
+
+  const w=v=>unitC?Math.round(v)+' km/h':Math.round(v*.621)+' mph';
+  const vis=v=>v==null?'—':unitC?Math.round(v)+' km':Math.round(v*.621)+' mi';
+  const aqiS=v=>v==null?'—':`${Math.round(v)} · ${aqiLabel(v)}`;
+  const rows=[
+    cmpRow('⬆️','High today',dp(A.hi)+'°',dp(B.hi)+'°'),
+    cmpRow('⬇️','Low today',dp(A.lo)+'°',dp(B.lo)+'°'),
+    cmpRow('🤔','Feels like',dp(A.feels)+'°',dp(B.feels)+'°'),
+    cmpRow('💧','Humidity',A.hum+'%',B.hum+'%'),
+    cmpRow('🌬️','Wind',w(A.wind),w(B.wind),A.wind,B.wind,'low'),
+    cmpRow('👁️','Visibility',vis(A.vis),vis(B.vis),A.vis,B.vis,'high'),
+    cmpRow('🫧','Pressure',Math.round(A.prs)+' hPa',Math.round(B.prs)+' hPa'),
+    cmpRow('☀️','UV index',`${Math.round(A.uv)} · ${uvLabel(A.uv)}`,`${Math.round(B.uv)} · ${uvLabel(B.uv)}`,A.uv,B.uv,'low'),
+    cmpRow('🌿','Air quality',aqiS(A.aqi),aqiS(B.aqi),A.aqi,B.aqi,'low'),
+    cmpRow('😷','PM2.5',A.pm25==null?'—':(Math.round(A.pm25*10)/10)+' μg/m³',B.pm25==null?'—':(Math.round(B.pm25*10)/10)+' μg/m³',A.pm25,B.pm25,'low'),
+    cmpRow('🌧️','Rain today',A.rain.toFixed(1)+' mm',B.rain.toFixed(1)+' mm',A.rain,B.rain,'low'),
+    cmpRow('☔','Rain · 7 days',A.rain7.toFixed(1)+' mm',B.rain7.toFixed(1)+' mm',A.rain7,B.rain7,'low'),
+    cmpRow('🌅','Sunrise',ft(A.sr),ft(B.sr)),
+    cmpRow('🌇','Sunset',ft(A.ss),ft(B.ss)),
+    cmpRow('⏳','Daylight',fmtDur(A.day),fmtDur(B.day),A.day,B.day,'high')
+  ].join('');
+
+  const nd=Math.min(cmpA.wx.daily.time.length,cmpB.wx.daily.time.length);
+  let days='';
+  for(let i=0;i<nd;i++){
+    const dt=new Date(cmpA.wx.daily.time[i]+'T12:00:00');
+    const side=x=>{const d=x.wx.daily;const[,ic]=wmo(d.weather_code[i]);return`<span class="cd-i">${ic}</span>${dp(d.temperature_2m_min[i])}° <span class="cd-sep">/</span> <b>${dp(d.temperature_2m_max[i])}°</b>`};
+    days+=`<div class="cmp-row"><div class="cr-v">${side(cmpA)}</div><div class="cr-day">${i===0?'Today':DAYS[dt.getDay()]}</div><div class="cr-v">${side(cmpB)}</div></div>`
+  }
+
+  bd.innerHTML=`
+    <div class="cmp-head">${card(cmpA,A,'a','A')}${card(cmpB,B,'b','B')}</div>
+    <div class="cmp-swap-row"><button class="cmp-swap" onclick="cmpSwap()">⇄ Swap cities</button></div>
+    <div class="cmp-sum">${sums.map(s=>`<div>${s}</div>`).join('')}</div>
+
+    <div class="chart-wrap">
+      <div class="stl" style="margin-bottom:0">Next 24 hours</div>
+      <div class="cmp-legend">
+        <span class="lg"><i style="background:${COL_A}"></i>${esc(cmpA.name)}</span>
+        <span class="lg"><i style="background:${COL_B}"></i>${esc(cmpB.name)}</span>
+      </div>
+      <svg id="cmp-chart"></svg>
+      <div class="chart-labels" id="cmp-xlabels"><span class="chart-lbl">Now</span><span class="chart-lbl">+6h</span><span class="chart-lbl">+12h</span><span class="chart-lbl">+18h</span><span class="chart-lbl">+23h</span></div>
+      <div class="cmp-readout" id="cmp-readout">Hover or tap the chart to compare by hour</div>
+    </div>
+
+    <div class="stl">Side by side</div>
+    <div class="cmp-note"><span style="width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block"></span>marks the more comfortable value</div>
+    <div class="cmp-table">${rows}</div>
+
+    <div class="stl">7-day outlook</div>
+    <div class="cmp-table">${days}</div>`;
+  requestAnimationFrame(drawCmpChart)
+}
+
+function hourSeries(x){
+  const h=x.wx.hourly,c=x.wx.current;
+  let si=h.time.findIndex(t=>t>=c.time.slice(0,13)+':00');if(si<0)si=0;
+  return h.temperature_2m.slice(si,si+24).map(dp)
+}
+function drawCmpChart(){
+  const svg=document.getElementById('cmp-chart');if(!svg||!cmpA||!cmpB)return;
+  const sa=hourSeries(cmpA),sb=hourSeries(cmpB),n=Math.min(sa.length,sb.length);
+  if(n<2)return;
+  const W=svg.clientWidth||460,H=150,pl=30,pr=10,pt=14,pb=12;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const all=sa.slice(0,n).concat(sb.slice(0,n));
+  let mn=Math.min(...all),mx=Math.max(...all);if(mx-mn<2){mn-=1;mx+=1}
+  const px=i=>pl+i/(n-1)*(W-pl-pr),py=v=>H-pb-(v-mn)/(mx-mn)*(H-pt-pb);
+  const line=s=>'M'+s.slice(0,n).map((v,i)=>`${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' L');
+  const mid=Math.round((mn+mx)/2);
+  const grid=[mx,mid,mn].map(v=>`<line x1="${pl}" x2="${W-pr}" y1="${py(v)}" y2="${py(v)}" stroke="rgba(255,255,255,.06)" stroke-dasharray="2 4"/><text x="${pl-6}" y="${py(v)+3}" text-anchor="end" font-size="9" fill="rgba(180,210,240,.45)" font-family="Outfit,sans-serif">${Math.round(v)}°</text>`).join('');
+  svg.innerHTML=`<defs>
+    <linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${COL_A}" stop-opacity=".18"/><stop offset="1" stop-color="${COL_A}" stop-opacity="0"/></linearGradient>
+    <linearGradient id="gb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${COL_B}" stop-opacity=".16"/><stop offset="1" stop-color="${COL_B}" stop-opacity="0"/></linearGradient></defs>
+    ${grid}
+    <path d="${line(sa)} L${px(n-1)},${H-pb} L${px(0)},${H-pb} Z" fill="url(#ga)"/>
+    <path d="${line(sb)} L${px(n-1)},${H-pb} L${px(0)},${H-pb} Z" fill="url(#gb)"/>
+    <path d="${line(sa)}" fill="none" stroke="${COL_A}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="${line(sb)}" fill="none" stroke="${COL_B}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <line id="cmp-cur" x1="0" x2="0" y1="${pt-4}" y2="${H-pb}" stroke="rgba(255,255,255,.35)" stroke-width="1" opacity="0"/>
+    <circle id="cmp-da" r="4" fill="${COL_A}" stroke="#07090f" stroke-width="1.5" opacity="0"/>
+    <circle id="cmp-db" r="4" fill="${COL_B}" stroke="#07090f" stroke-width="1.5" opacity="0"/>`;
+  const ro=document.getElementById('cmp-readout');
+  const move=e=>{
+    const r=svg.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*W;
+    const i=Math.max(0,Math.min(n-1,Math.round((x-pl)/(W-pl-pr)*(n-1))));
+    const cur=svg.querySelector('#cmp-cur'),da=svg.querySelector('#cmp-da'),db=svg.querySelector('#cmp-db');
+    cur.setAttribute('x1',px(i));cur.setAttribute('x2',px(i));cur.setAttribute('opacity','1');
+    da.setAttribute('cx',px(i));da.setAttribute('cy',py(sa[i]));da.setAttribute('opacity','1');
+    db.setAttribute('cx',px(i));db.setAttribute('cy',py(sb[i]));db.setAttribute('opacity','1');
+    ro.innerHTML=`${i===0?'Now':'+'+i+'h'} &nbsp;·&nbsp; <b style="color:${COL_A}">${esc(cmpA.name)} ${sa[i]}°</b> &nbsp;·&nbsp; <b style="color:${COL_B}">${esc(cmpB.name)} ${sb[i]}°</b>`
+  };
+  svg.onpointermove=move;svg.onpointerdown=move
+}
+addEventListener('resize',()=>{if(document.getElementById('s-compare').classList.contains('on')&&cmpA&&cmpB&&!cmpPicking)drawCmpChart()});
 </script>
 </body>
 </html>
